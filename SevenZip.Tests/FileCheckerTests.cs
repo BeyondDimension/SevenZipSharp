@@ -1,4 +1,4 @@
-﻿namespace SevenZip.Tests
+namespace SevenZip.Tests
 {
     using System.Collections.Generic;
     using System.IO;
@@ -6,6 +6,7 @@
     using SevenZip;
 
     using NUnit.Framework;
+    using System;
 
     /// <summary>
     /// Test data to use for CheckFileSignatureTest.
@@ -27,7 +28,7 @@
         /// Path to archive file to test against.
         /// </summary>
         public string TestDataFilePath { get; }
-        
+
         public override string ToString()
         {
             // Used to get useful test results.
@@ -85,11 +86,11 @@
             // Ensures we're in the correct working directory (for test data files).
             Directory.SetCurrentDirectory(TestContext.CurrentContext.TestDirectory);
         }
-        
+
         [TestCaseSource(nameof(TestData))]
         public void CheckFileSignatureTest(FileCheckerTestData data)
         {
-            if (!File.Exists(data.TestDataFilePath))
+            if (!File.Exists(Path.Combine(AppContext.BaseDirectory, data.TestDataFilePath)))
             {
                 Assert.Ignore("No test data found for this format.");
             }

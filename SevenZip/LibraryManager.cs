@@ -37,17 +37,114 @@ namespace SevenZip
 
         private static string DetermineLibraryFilePath()
         {
-            if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["7zLocation"]))
+            //if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["7zLocation"]))
+            //{
+            //    return ConfigurationManager.AppSettings["7zLocation"];
+            //}
+
+            //if (string.IsNullOrEmpty(Assembly.GetExecutingAssembly().Location))
+            //{
+            //    return null;
+            //}
+
+            //return Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), Environment.Is64BitProcess ? "7z64.dll" : "7z.dll");
+
+            var baseDirectory = AppContext.BaseDirectory;
+            string runtimeIdentifier = null;
+            string libFileName = "7z.dll";
+#if NET5_0_OR_GREATER
+            runtimeIdentifier = RuntimeInformation.RuntimeIdentifier;
+#endif
+            if (string.IsNullOrWhiteSpace(runtimeIdentifier))
             {
-                return ConfigurationManager.AppSettings["7zLocation"];
-            }
-	
-            if (string.IsNullOrEmpty(Assembly.GetExecutingAssembly().Location)) 
-            {
-                return null;
+#if NET5_0_OR_GREATER
+                bool isWindows = OperatingSystem.IsWindows();
+                bool isMacOS = OperatingSystem.IsMacOS();
+                bool isMacCatalyst = OperatingSystem.IsMacCatalyst();
+                bool isLinux = OperatingSystem.IsLinux();
+#else
+                bool isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+                bool isMacOS = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+                bool isMacCatalyst = false;
+                bool isLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+#endif
+                if (isWindows)
+                {
+                    switch (RuntimeInformation.ProcessArchitecture)
+                    {
+                        case Architecture.X86:
+                            runtimeIdentifier = "win-x86";
+                            break;
+                        case Architecture.X64:
+                            runtimeIdentifier = "win-x64";
+                            break;
+                        case Architecture.Arm:
+                            runtimeIdentifier = "win-arm";
+                            break;
+                        case Architecture.Arm64:
+                            runtimeIdentifier = "win-arm64";
+                            break;
+                    }
+                }
+                else if (isMacOS)
+                {
+                    switch (RuntimeInformation.ProcessArchitecture)
+                    {
+                        case Architecture.X64:
+                            runtimeIdentifier = "osx-x64";
+                            break;
+                        case Architecture.Arm64:
+                            runtimeIdentifier = "osx-arm64";
+                            break;
+                    }
+                    libFileName = "7zz";
+                }
+                else if (isMacCatalyst)
+                {
+                    switch (RuntimeInformation.ProcessArchitecture)
+                    {
+                        case Architecture.X64:
+                            runtimeIdentifier = "maccatalyst-x64";
+                            break;
+                        case Architecture.Arm64:
+                            runtimeIdentifier = "maccatalyst-arm64";
+                            break;
+                    }
+                    libFileName = "7zz";
+                }
+                else if (isLinux)
+                {
+                    switch (RuntimeInformation.ProcessArchitecture)
+                    {
+                        case Architecture.X86:
+                            runtimeIdentifier = "linux-x86";
+                            break;
+                        case Architecture.X64:
+                            runtimeIdentifier = "linux-x64";
+                            break;
+                        case Architecture.Arm:
+                            runtimeIdentifier = "linux-arm";
+                            break;
+                        case Architecture.Arm64:
+                            runtimeIdentifier = "linux-arm64";
+                            break;
+                    }
+                    libFileName = "7zz";
+                }
             }
 
-            return Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), Environment.Is64BitProcess ? "7z64.dll" : "7z.dll");
+            string libFilePath;
+            if (!string.IsNullOrWhiteSpace(runtimeIdentifier))
+            {
+                libFilePath = Path.Combine(baseDirectory, "runtimes", runtimeIdentifier, "native", libFileName);
+                if (File.Exists(libFilePath))
+                {
+                    return libFilePath;
+                }
+            }
+
+            libFilePath = Path.Combine(baseDirectory, libFileName);
+            return libFilePath;
         }
 
         /// <summary>
@@ -125,14 +222,26 @@ namespace SevenZip
                         throw new SevenZipLibraryException("DLL file does not exist.");
                     }
 
+#if NETCOREAPP3_0_OR_GREATER
+                    if ((_modulePtr = NativeLibrary.Load(_libraryFileName)) == IntPtr.Zero)
+#else
                     if ((_modulePtr = NativeMethods.LoadLibrary(_libraryFileName)) == IntPtr.Zero)
+#endif
                     {
                         throw new SevenZipLibraryException($"failed to load library from \"{_libraryFileName}\".");
                     }
 
+#if NETCOREAPP3_0_OR_GREATER
+                    if (NativeLibrary.GetExport(_modulePtr, "GetHandlerProperty") == IntPtr.Zero)
+#else
                     if (NativeMethods.GetProcAddress(_modulePtr, "GetHandlerProperty") == IntPtr.Zero)
+#endif
                     {
+#if NETCOREAPP3_0_OR_GREATER
+                        NativeLibrary.Free(_modulePtr);
+#else
                         NativeMethods.FreeLibrary(_modulePtr);
+#endif
                         throw new SevenZipLibraryException("library is invalid.");
                     }
                 }
@@ -188,7 +297,7 @@ namespace SevenZip
         private static bool ExtractionBenchmark(string archiveFileName, Stream outStream, ref LibraryFeature? features, LibraryFeature testedFeature)
         {
             var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(GetResourceString(archiveFileName));
-            
+
             try
             {
                 using (var extractor = new SevenZipExtractor(stream))
@@ -350,7 +459,7 @@ namespace SevenZip
             sp.Demand();
 #endif
             lock (SyncRoot)
-			{
+            {
                 if (_modulePtr != IntPtr.Zero)
                 {
                     if (format is InArchiveFormat archiveFormat)
@@ -360,14 +469,14 @@ namespace SevenZip
                             _inArchives[user][archiveFormat] != null)
                         {
                             try
-                            {                            
+                            {
                                 Marshal.ReleaseComObject(_inArchives[user][archiveFormat]);
                             }
-                            catch (InvalidComObjectException) {}
-                            
+                            catch (InvalidComObjectException) { }
+
                             _inArchives[user].Remove(archiveFormat);
                             _totalUsers--;
-                            
+
                             if (_inArchives[user].Count == 0)
                             {
                                 _inArchives.Remove(user);
@@ -385,11 +494,11 @@ namespace SevenZip
                             {
                                 Marshal.ReleaseComObject(_outArchives[user][outArchiveFormat]);
                             }
-                            catch (InvalidComObjectException) {}
-                            
+                            catch (InvalidComObjectException) { }
+
                             _outArchives[user].Remove(outArchiveFormat);
                             _totalUsers--;
-                            
+
                             if (_outArchives[user].Count == 0)
                             {
                                 _outArchives.Remove(user);
@@ -404,12 +513,16 @@ namespace SevenZip
 
                         if (_totalUsers == 0)
                         {
+#if NETCOREAPP3_0_OR_GREATER
+                            NativeLibrary.Free(_modulePtr);
+#else
                             NativeMethods.FreeLibrary(_modulePtr);
+#endif
                             _modulePtr = IntPtr.Zero;
                         }
                     }
                 }
-			}
+            }
         }
 
         /// <summary>
@@ -440,7 +553,11 @@ namespace SevenZip
 
                     var createObject = (NativeMethods.CreateObjectDelegate)
                         Marshal.GetDelegateForFunctionPointer(
+#if NETCOREAPP3_0_OR_GREATER
+                            NativeLibrary.GetExport(_modulePtr, "CreateObject"),
+#else
                             NativeMethods.GetProcAddress(_modulePtr, "CreateObject"),
+#endif
                             typeof(NativeMethods.CreateObjectDelegate));
 
                     if (createObject == null)
@@ -461,7 +578,7 @@ namespace SevenZip
                         throw new SevenZipLibraryException("Your 7-zip library does not support this archive type.");
                     }
 
-                    InitUserInFormat(user, format);									
+                    InitUserInFormat(user, format);
                     _inArchives[user][format] = result as IInArchive;
                 }
 
@@ -491,16 +608,20 @@ namespace SevenZip
 
                     var createObject = (NativeMethods.CreateObjectDelegate)
                         Marshal.GetDelegateForFunctionPointer(
+#if NETCOREAPP3_0_OR_GREATER
+                            NativeLibrary.GetExport(_modulePtr, "CreateObject"),
+#else
                             NativeMethods.GetProcAddress(_modulePtr, "CreateObject"),
+#endif
                             typeof(NativeMethods.CreateObjectDelegate));
                     var interfaceId = typeof(IOutArchive).GUID;
-                    
+
 
                     try
                     {
                         var classId = Formats.OutFormatGuids[format];
                         createObject(ref classId, ref interfaceId, out var result);
-                        
+
                         InitUserOutFormat(user, format);
                         _outArchives[user][format] = result as IOutArchive;
                     }
@@ -520,7 +641,7 @@ namespace SevenZip
             {
                 throw new SevenZipLibraryException($"can not change the library path while the library \"{_libraryFileName}\" is being used.");
             }
-            
+
             if (!File.Exists(libraryPath))
             {
                 throw new SevenZipLibraryException($"can not change the library path because the file \"{libraryPath}\" does not exist.");

@@ -1,4 +1,4 @@
-﻿namespace SevenZip.Tests
+namespace SevenZip.Tests
 {
     using NUnit.Framework;
 

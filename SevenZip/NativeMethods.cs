@@ -12,6 +12,8 @@ namespace SevenZip
             [In] ref Guid interfaceID,
             [MarshalAs(UnmanagedType.Interface)] out object outObject);
 
+
+#if !NETCOREAPP3_0_OR_GREATER
         [DllImport("kernel32.dll", BestFitMapping = false, ThrowOnUnmappableChar = true)]
         public static extern IntPtr LoadLibrary([MarshalAs(UnmanagedType.LPStr)] string fileName);
 
@@ -21,11 +23,12 @@ namespace SevenZip
 
         [DllImport("kernel32.dll", BestFitMapping = false, ThrowOnUnmappableChar = true)]
         public static extern IntPtr GetProcAddress(IntPtr hModule, [MarshalAs(UnmanagedType.LPStr)] string procName);
+#endif
 
         public static T SafeCast<T>(PropVariant var, T def)
         {
             object obj;
-            
+
             try
             {
                 obj = var.Object;
@@ -39,7 +42,7 @@ namespace SevenZip
             {
                 return expected;
             }
-            
+
             return def;
         }
     }

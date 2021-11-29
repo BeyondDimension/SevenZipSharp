@@ -11,6 +11,7 @@
     [TestFixture]
     public class MiscellaneousTests : TestBase
     {
+#if !NET5_0_OR_GREATER
         [Test]
         public void SerializationTest()
         {
@@ -27,6 +28,7 @@
                 }
             }
         }
+#endif
 
 #if SFX
         [Test]
