@@ -179,7 +179,7 @@
         /// <param name="xmlDefinitions_xsd">The resource name for xsd definitions</param>
         private unsafe void LoadCommandsFromResource(string xmlDefinitions_xml, string xmlDefinitions_xsd)
         {
-            var bytes_cfg = LibraryManager.GetManifestResource(xmlDefinitions_xml, "sfx");
+            var bytes_cfg = SevenZipLibraryManager.GetManifestResource(xmlDefinitions_xml, "sfx");
             var bytes_cfg_span = bytes_cfg.AsSpan();
             bytes_cfg_span.Reverse();
             fixed (byte* ptr_cfg = bytes_cfg)
@@ -194,7 +194,7 @@
 
                     using UnmanagedMemoryStream cfg = new(ptr_cfg, bytes_cfg.Length);
 
-                    var bytes_schm = LibraryManager.GetManifestResource(xmlDefinitions_xsd, "sfx");
+                    var bytes_schm = SevenZipLibraryManager.GetManifestResource(xmlDefinitions_xsd, "sfx");
                     var bytes_schm_span = bytes_schm.AsSpan();
                     bytes_schm_span.Reverse();
                     fixed (byte* ptr_schm = bytes_schm)
@@ -435,7 +435,7 @@
         /// <param name="archive">The archive stream.</param>
         /// <param name="settings">The sfx settings.</param>
         /// <param name="sfxStream">The stream to write the self-extracting executable to.</param>
-        public void MakeSfx(Stream archive, SfxSettings settings, Stream sfxStream)
+        public unsafe void MakeSfx(Stream archive, SfxSettings settings, Stream sfxStream)
         {
             if (!sfxStream.CanWrite)
             {
@@ -444,9 +444,20 @@
 
             ValidateSettings(settings);
 
-            using (var sfx = Assembly.GetExecutingAssembly().GetManifestResourceStream(GetResourceString(SfxSupportedModuleNames[SfxModule][0])))
+            var bytes_sfx = SevenZipLibraryManager.GetManifestResource(SfxSupportedModuleNames[SfxModule][0], "sfx");
+            var bytes_sfx_span = bytes_sfx.AsSpan();
+            bytes_sfx_span.Reverse();
+            fixed (byte* ptr_sfx = bytes_sfx)
             {
-                WriteStream(sfx, sfxStream);
+                try
+                {
+                    using UnmanagedMemoryStream sfx = new(ptr_sfx, bytes_sfx.Length);
+                    WriteStream(sfx, sfxStream);
+                }
+                finally
+                {
+                    bytes_sfx_span.Clear();
+                }
             }
 
             if (SfxModule == SfxModule.Custom || _sfxCommands[SfxModule] != null)

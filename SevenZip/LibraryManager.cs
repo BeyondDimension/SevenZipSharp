@@ -289,7 +289,7 @@ namespace SevenZip
 
         private static unsafe bool ExtractionBenchmark(string archiveFileName, Stream outStream, ref LibraryFeature? features, LibraryFeature testedFeature)
         {
-            var bytes = LibraryManager.GetManifestResource(archiveFileName, "arch");
+            var bytes = SevenZipLibraryManager.GetManifestResource(archiveFileName, "arch");
             var bytes_span = bytes.AsSpan();
             bytes_span.Reverse();
             fixed (byte* ptr = bytes)

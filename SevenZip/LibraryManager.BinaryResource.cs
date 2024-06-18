@@ -196,6 +196,6 @@
         _ => [],
     };
 """)]
-partial class LibraryManager
+partial class SevenZipLibraryManager
 {
 }
