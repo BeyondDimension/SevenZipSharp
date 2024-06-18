@@ -16,7 +16,7 @@ namespace SevenZip
     /// <summary>
     /// 7-zip library low-level wrapper.
     /// </summary>
-    internal static class SevenZipLibraryManager
+    internal static partial class SevenZipLibraryManager
     {
         /// <summary>
         /// Synchronization root for all locking.
@@ -287,31 +287,37 @@ namespace SevenZip
             }
         }
 
-        static readonly string Namespace = Assembly.GetExecutingAssembly().GetManifestResourceNames()[0].Split('.')[0];
-
-        private static string GetResourceString(string str)
+        private static unsafe bool ExtractionBenchmark(string archiveFileName, Stream outStream, ref LibraryFeature? features, LibraryFeature testedFeature)
         {
-            return Namespace + ".arch." + str;
-        }
-
-        private static bool ExtractionBenchmark(string archiveFileName, Stream outStream, ref LibraryFeature? features, LibraryFeature testedFeature)
-        {
-            var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(GetResourceString(archiveFileName));
-
-            try
+            var bytes = LibraryManager.GetManifestResource(archiveFileName, "arch");
+            var bytes_span = bytes.AsSpan();
+            bytes_span.Reverse();
+            fixed (byte* ptr = bytes)
             {
-                using (var extractor = new SevenZipExtractor(stream))
+                try
                 {
-                    extractor.ExtractFile(0, outStream);
+                    using UnmanagedMemoryStream stream = new(ptr, bytes.Length);
+
+                    try
+                    {
+                        using (var extractor = new SevenZipExtractor(stream))
+                        {
+                            extractor.ExtractFile(0, outStream);
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        return false;
+                    }
+
+                    features |= testedFeature;
+                    return true;
+                }
+                finally
+                {
+                    bytes_span.Clear();
                 }
             }
-            catch (Exception)
-            {
-                return false;
-            }
-
-            features |= testedFeature;
-            return true;
         }
 
         private static bool CompressionBenchmark(Stream inStream, Stream outStream, OutArchiveFormat format, CompressionMethod method, ref LibraryFeature? features, LibraryFeature testedFeature)

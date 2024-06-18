@@ -1,0 +1,20 @@
+<Project>
+	<ItemGroup>
+		<PackageVersion Include="BD.Common8.SourceGenerator.Bcl" Version="8.24.10618.11700">
+		</PackageVersion>
+		<PackageVersion Include="BD.Common8.SourceGenerator.ResX" Version="8.24.10618.11700">
+		</PackageVersion>
+		<PackageVersion Include="BD.Common8.Bcl" Version="8.24.10618.11700">
+		</PackageVersion>
+		<PackageVersion Include="7-Zip.NativeAssets.Win32" Version="24.5.0">
+		</PackageVersion>
+		<PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.5.0">
+		</PackageVersion>
+		<PackageVersion Include="NUnit" Version="3.13.3">
+		</PackageVersion>
+		<PackageVersion Include="NUnit3TestAdapter" Version="4.4.2">
+		</PackageVersion>
+		<PackageVersion Include="System.Net.Http" Version="4.3.4">
+		</PackageVersion>
+	</ItemGroup>
+</Project>

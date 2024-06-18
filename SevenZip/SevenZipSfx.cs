@@ -142,7 +142,7 @@
 
         private void CommonInit()
         {
-            LoadCommandsFromResource("Configs");
+            LoadCommandsFromResource("Configs.xml", "Configs.xsd");
         }
 
         private static string GetResourceString(string str)
@@ -175,78 +175,103 @@
         /// <summary>
         /// Loads the commands for each supported sfx module configuration
         /// </summary>
-        /// <param name="xmlDefinitions">The resource name for xml definitions</param>
-        private void LoadCommandsFromResource(string xmlDefinitions)
+        /// <param name="xmlDefinitions_xml">The resource name for xml definitions</param>
+        /// <param name="xmlDefinitions_xsd">The resource name for xsd definitions</param>
+        private unsafe void LoadCommandsFromResource(string xmlDefinitions_xml, string xmlDefinitions_xsd)
         {
-            using (var cfg = Assembly.GetExecutingAssembly().GetManifestResourceStream(
-                GetResourceString(xmlDefinitions + ".xml")))
+            var bytes_cfg = LibraryManager.GetManifestResource(xmlDefinitions_xml, "sfx");
+            var bytes_cfg_span = bytes_cfg.AsSpan();
+            bytes_cfg_span.Reverse();
+            fixed (byte* ptr_cfg = bytes_cfg)
             {
-                if (cfg == null)
+                try
                 {
-                    throw new SevenZipSfxValidationException("The configuration \"" + xmlDefinitions +
-                                                             "\" does not exist.");
-                }
-                using (var schm = Assembly.GetExecutingAssembly().GetManifestResourceStream(
-                    GetResourceString(xmlDefinitions + ".xsd")))
-                {
-                    if (schm == null)
+                    if (bytes_cfg.Length == 0)
                     {
-                        throw new SevenZipSfxValidationException("The configuration schema \"" + xmlDefinitions +
+                        throw new SevenZipSfxValidationException("The configuration \"" + xmlDefinitions_xml +
                                                                  "\" does not exist.");
                     }
-                    var sc = new XmlSchemaSet();
-                    using (var scr = XmlReader.Create(schm))
+
+                    using UnmanagedMemoryStream cfg = new(ptr_cfg, bytes_cfg.Length);
+
+                    var bytes_schm = LibraryManager.GetManifestResource(xmlDefinitions_xsd, "sfx");
+                    var bytes_schm_span = bytes_schm.AsSpan();
+                    bytes_schm_span.Reverse();
+                    fixed (byte* ptr_schm = bytes_schm)
                     {
-                        sc.Add(null, scr);
-                        var settings = new XmlReaderSettings {ValidationType = ValidationType.Schema, Schemas = sc};
-                        var validationErrors = "";
-                        settings.ValidationEventHandler +=
-                            ((s, t) =>
-                            {
-                                validationErrors += string.Format(CultureInfo.InvariantCulture, "[{0}]: {1}\n",
-                                                                  t.Severity.ToString(), t.Message);
-                            });
-                        using (var rdr = XmlReader.Create(cfg, settings))
+                        try
                         {
-                            _sfxCommands = new Dictionary<SfxModule, List<string>>();
-                            rdr.Read();
-                            rdr.Read();
-                            rdr.Read();
-                            rdr.Read();
-                            rdr.Read();
-                            rdr.ReadStartElement("sfxConfigs");
-                            rdr.Read();
-                            do
+                            if (bytes_schm.Length == 0)
                             {
-                                var mod = GetModuleByName(rdr["modules"]);
-                                rdr.ReadStartElement("config");
-                                rdr.Read();
-                                if (rdr.Name == "id")
+                                throw new SevenZipSfxValidationException("The configuration schema \"" + xmlDefinitions_xsd +
+                                                                         "\" does not exist.");
+                            }
+
+                            using UnmanagedMemoryStream schm = new(ptr_schm, bytes_schm.Length);
+
+                            var sc = new XmlSchemaSet();
+                            using (var scr = XmlReader.Create(schm))
+                            {
+                                sc.Add(null, scr);
+                                var settings = new XmlReaderSettings { ValidationType = ValidationType.Schema, Schemas = sc };
+                                var validationErrors = "";
+                                settings.ValidationEventHandler +=
+                                    ((s, t) =>
+                                    {
+                                        validationErrors += string.Format(CultureInfo.InvariantCulture, "[{0}]: {1}\n",
+                                                                          t.Severity.ToString(), t.Message);
+                                    });
+                                using (var rdr = XmlReader.Create(cfg, settings))
                                 {
-                                    var cmds = new List<string>();
-                                    _sfxCommands.Add(mod, cmds);
+                                    _sfxCommands = new Dictionary<SfxModule, List<string>>();
+                                    rdr.Read();
+                                    rdr.Read();
+                                    rdr.Read();
+                                    rdr.Read();
+                                    rdr.Read();
+                                    rdr.ReadStartElement("sfxConfigs");
+                                    rdr.Read();
                                     do
                                     {
-                                        cmds.Add(rdr["command"]);
+                                        var mod = GetModuleByName(rdr["modules"]);
+                                        rdr.ReadStartElement("config");
                                         rdr.Read();
-                                        rdr.Read();
-                                    } while (rdr.Name == "id");
-                                    rdr.ReadEndElement();
-                                    rdr.Read();
+                                        if (rdr.Name == "id")
+                                        {
+                                            var cmds = new List<string>();
+                                            _sfxCommands.Add(mod, cmds);
+                                            do
+                                            {
+                                                cmds.Add(rdr["command"]);
+                                                rdr.Read();
+                                                rdr.Read();
+                                            } while (rdr.Name == "id");
+                                            rdr.ReadEndElement();
+                                            rdr.Read();
+                                        }
+                                        else
+                                        {
+                                            _sfxCommands.Add(mod, null);
+                                        }
+                                    } while (rdr.Name == "config");
                                 }
-                                else
+                                if (!string.IsNullOrEmpty(validationErrors))
                                 {
-                                    _sfxCommands.Add(mod, null);
+                                    throw new SevenZipSfxValidationException(
+                                        "\n" + validationErrors.Substring(0, validationErrors.Length - 1));
                                 }
-                            } while (rdr.Name == "config");
+                                _sfxCommands.Add(SfxModule.Default, _sfxCommands[SfxModule.Extended]);
+                            }
                         }
-                        if (!string.IsNullOrEmpty(validationErrors))
+                        finally
                         {
-                            throw new SevenZipSfxValidationException(
-                                "\n" + validationErrors.Substring(0, validationErrors.Length - 1));
+                            bytes_schm_span.Clear();
                         }
-                        _sfxCommands.Add(SfxModule.Default, _sfxCommands[SfxModule.Extended]);
                     }
+                }
+                finally
+                {
+                    bytes_cfg_span.Clear();
                 }
             }
         }
@@ -263,14 +288,14 @@
             }
 
             var commands = _sfxCommands[SfxModule];
-            
+
             if (commands == null)
             {
                 return;
             }
-            
+
             var invalidCommands = new List<string>();
-            
+
             foreach (var command in settings.Keys)
             {
                 if (!commands.Contains(command))
@@ -278,16 +303,16 @@
                     invalidCommands.Add(command);
                 }
             }
-            
+
             if (invalidCommands.Count > 0)
             {
                 var invalidText = new StringBuilder("\nInvalid commands:\n");
-                
+
                 foreach (var str in invalidCommands)
                 {
                     invalidText.Append(str);
                 }
-                
+
                 throw new SevenZipSfxValidationException(invalidText.ToString());
             }
         }
@@ -302,7 +327,7 @@
             var ms = new MemoryStream();
             var buf = Encoding.UTF8.GetBytes(@";!@Install@!UTF-8!" + '\n');
             ms.Write(buf, 0, buf.Length);
-            
+
             foreach (var command in settings.Keys)
             {
                 buf =
@@ -310,10 +335,10 @@
                                                          settings[command]));
                 ms.Write(buf, 0, buf.Length);
             }
-           
+
             buf = Encoding.UTF8.GetBytes(@";!@InstallEnd@!");
             ms.Write(buf, 0, buf.Length);
-            
+
             return ms;
         }
 
@@ -324,7 +349,7 @@
                 default:
                     return null;
                 case SfxModule.Installer:
-                    var settings = new Dictionary<string, string> {{"Title", "7-Zip self-extracting archive"}};
+                    var settings = new Dictionary<string, string> { { "Title", "7-Zip self-extracting archive" } };
                     return settings;
                 case SfxModule.Default:
                 case SfxModule.Extended:
@@ -360,7 +385,7 @@
             src.Seek(0, SeekOrigin.Begin);
             var buf = new byte[32768];
             int bytesRead;
-            
+
             while ((bytesRead = src.Read(buf, 0, buf.Length)) > 0)
             {
                 dest.Write(buf, 0, bytesRead);

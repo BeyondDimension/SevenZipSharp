@@ -1,7 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <AssemblyName>SevenZipSharp</AssemblyName>
-    <TargetFrameworks>netstandard2.0;net472;netcoreapp3.1;net8.0</TargetFrameworks>
+    <!--<TargetFrameworks>netstandard2.0;net472;netcoreapp3.1;net8.0</TargetFrameworks>-->
+    <TargetFrameworks>net8.0</TargetFrameworks>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>SevenZip.snk</AssemblyOriginatorKeyFile>
     <AssemblyTitle>SevenZipSharp</AssemblyTitle>
@@ -33,7 +35,7 @@
   <ItemGroup>
     <None Include="SevenZip.snk" />
   </ItemGroup>
-  <ItemGroup Condition="$(DefineConstants.Contains('SFX'))">
+  <!--<ItemGroup Condition="$(DefineConstants.Contains('SFX'))">
     <EmbeddedResource Include="sfx\7z.sfx" />
     <EmbeddedResource Include="sfx\7zCon.sfx" />
     <EmbeddedResource Include="sfx\7zS.sfx" />
@@ -64,7 +66,7 @@
     <EmbeddedResource Include="arch\Test.txt.gz" />
     <EmbeddedResource Include="arch\Test.txt.xz" />
     <EmbeddedResource Include="arch\Test.zip" /> 
-  </ItemGroup>
+  </ItemGroup>-->
   <ItemGroup>
     <!--<PackageReference Condition="'$(TargetFramework)' != 'net472'" Include="System.Configuration.ConfigurationManager" Version="4.5.0" />-->
     <PackageReference Condition="'$(TargetFramework)' == 'netstandard2.0'" Include="System.Security.Permissions" Version="4.5.0" />
@@ -73,5 +75,8 @@
     <!--<Reference Include="System.Configuration" Condition="'$(TargetFramework)' == 'net472'">
       <HintPath>C:\Windows\Microsoft.NET\assembly\GAC_MSIL\System.Configuration\v4.0_4.0.0.0__b03f5f7f11d50a3a\System.Configuration.dll</HintPath>
     </Reference>-->
+  </ItemGroup>
+  <ItemGroup>
+  	<PackageReference Include="BD.Common8.Bcl" />
   </ItemGroup>
 </Project>
