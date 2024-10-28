@@ -35,117 +35,117 @@ namespace SevenZip
         /// </remarks>
         private static string _libraryFileName;
 
-        private static string DetermineLibraryFilePath()
-        {
-            //if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["7zLocation"]))
-            //{
-            //    return ConfigurationManager.AppSettings["7zLocation"];
-            //}
+        //        private static string DetermineLibraryFilePath()
+        //        {
+        //            //if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["7zLocation"]))
+        //            //{
+        //            //    return ConfigurationManager.AppSettings["7zLocation"];
+        //            //}
 
-            //if (string.IsNullOrEmpty(Assembly.GetExecutingAssembly().Location))
-            //{
-            //    return null;
-            //}
+        //            //if (string.IsNullOrEmpty(Assembly.GetExecutingAssembly().Location))
+        //            //{
+        //            //    return null;
+        //            //}
 
-            //return Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), Environment.Is64BitProcess ? "7z64.dll" : "7z.dll");
+        //            //return Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), Environment.Is64BitProcess ? "7z64.dll" : "7z.dll");
 
-            var baseDirectory = AppContext.BaseDirectory;
-            string runtimeIdentifier = null;
-            string libFileName = "7z.dll";
-#if NET5_0_OR_GREATER
-            runtimeIdentifier = RuntimeInformation.RuntimeIdentifier;
-#endif
-            if (string.IsNullOrWhiteSpace(runtimeIdentifier))
-            {
-#if NET5_0_OR_GREATER
-                bool isWindows = OperatingSystem.IsWindows();
-                bool isMacOS = OperatingSystem.IsMacOS();
-                bool isMacCatalyst = OperatingSystem.IsMacCatalyst();
-                bool isLinux = OperatingSystem.IsLinux();
-#else
-                bool isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-                bool isMacOS = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
-                bool isMacCatalyst = false;
-                bool isLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
-#endif
-                if (isWindows)
-                {
-                    switch (RuntimeInformation.ProcessArchitecture)
-                    {
-                        case Architecture.X86:
-                            runtimeIdentifier = "win-x86";
-                            break;
-                        case Architecture.X64:
-                            runtimeIdentifier = "win-x64";
-                            break;
-                        case Architecture.Arm:
-                            runtimeIdentifier = "win-arm";
-                            break;
-                        case Architecture.Arm64:
-                            runtimeIdentifier = "win-arm64";
-                            break;
-                    }
-                }
-                else if (isMacOS)
-                {
-                    switch (RuntimeInformation.ProcessArchitecture)
-                    {
-                        case Architecture.X64:
-                            runtimeIdentifier = "osx-x64";
-                            break;
-                        case Architecture.Arm64:
-                            runtimeIdentifier = "osx-arm64";
-                            break;
-                    }
-                    libFileName = "7zz";
-                }
-                else if (isMacCatalyst)
-                {
-                    switch (RuntimeInformation.ProcessArchitecture)
-                    {
-                        case Architecture.X64:
-                            runtimeIdentifier = "maccatalyst-x64";
-                            break;
-                        case Architecture.Arm64:
-                            runtimeIdentifier = "maccatalyst-arm64";
-                            break;
-                    }
-                    libFileName = "7zz";
-                }
-                else if (isLinux)
-                {
-                    switch (RuntimeInformation.ProcessArchitecture)
-                    {
-                        case Architecture.X86:
-                            runtimeIdentifier = "linux-x86";
-                            break;
-                        case Architecture.X64:
-                            runtimeIdentifier = "linux-x64";
-                            break;
-                        case Architecture.Arm:
-                            runtimeIdentifier = "linux-arm";
-                            break;
-                        case Architecture.Arm64:
-                            runtimeIdentifier = "linux-arm64";
-                            break;
-                    }
-                    libFileName = "7zz";
-                }
-            }
+        //            var baseDirectory = AppContext.BaseDirectory;
+        //            string runtimeIdentifier = null;
+        //            string libFileName = "7z.dll";
+        //#if NET5_0_OR_GREATER
+        //            runtimeIdentifier = RuntimeInformation.RuntimeIdentifier;
+        //#endif
+        //            if (string.IsNullOrWhiteSpace(runtimeIdentifier))
+        //            {
+        //#if NET5_0_OR_GREATER
+        //                bool isWindows = OperatingSystem.IsWindows();
+        //                bool isMacOS = OperatingSystem.IsMacOS();
+        //                bool isMacCatalyst = OperatingSystem.IsMacCatalyst();
+        //                bool isLinux = OperatingSystem.IsLinux();
+        //#else
+        //                bool isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+        //                bool isMacOS = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+        //                bool isMacCatalyst = false;
+        //                bool isLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+        //#endif
+        //                if (isWindows)
+        //                {
+        //                    switch (RuntimeInformation.ProcessArchitecture)
+        //                    {
+        //                        case Architecture.X86:
+        //                            runtimeIdentifier = "win-x86";
+        //                            break;
+        //                        case Architecture.X64:
+        //                            runtimeIdentifier = "win-x64";
+        //                            break;
+        //                        case Architecture.Arm:
+        //                            runtimeIdentifier = "win-arm";
+        //                            break;
+        //                        case Architecture.Arm64:
+        //                            runtimeIdentifier = "win-arm64";
+        //                            break;
+        //                    }
+        //                }
+        //                else if (isMacOS)
+        //                {
+        //                    switch (RuntimeInformation.ProcessArchitecture)
+        //                    {
+        //                        case Architecture.X64:
+        //                            runtimeIdentifier = "osx-x64";
+        //                            break;
+        //                        case Architecture.Arm64:
+        //                            runtimeIdentifier = "osx-arm64";
+        //                            break;
+        //                    }
+        //                    libFileName = "7zz";
+        //                }
+        //                else if (isMacCatalyst)
+        //                {
+        //                    switch (RuntimeInformation.ProcessArchitecture)
+        //                    {
+        //                        case Architecture.X64:
+        //                            runtimeIdentifier = "maccatalyst-x64";
+        //                            break;
+        //                        case Architecture.Arm64:
+        //                            runtimeIdentifier = "maccatalyst-arm64";
+        //                            break;
+        //                    }
+        //                    libFileName = "7zz";
+        //                }
+        //                else if (isLinux)
+        //                {
+        //                    switch (RuntimeInformation.ProcessArchitecture)
+        //                    {
+        //                        case Architecture.X86:
+        //                            runtimeIdentifier = "linux-x86";
+        //                            break;
+        //                        case Architecture.X64:
+        //                            runtimeIdentifier = "linux-x64";
+        //                            break;
+        //                        case Architecture.Arm:
+        //                            runtimeIdentifier = "linux-arm";
+        //                            break;
+        //                        case Architecture.Arm64:
+        //                            runtimeIdentifier = "linux-arm64";
+        //                            break;
+        //                    }
+        //                    libFileName = "7zz";
+        //                }
+        //            }
 
-            string libFilePath;
-            if (!string.IsNullOrWhiteSpace(runtimeIdentifier))
-            {
-                libFilePath = Path.Combine(baseDirectory, "runtimes", runtimeIdentifier, "native", libFileName);
-                if (File.Exists(libFilePath))
-                {
-                    return libFilePath;
-                }
-            }
+        //            string libFilePath;
+        //            if (!string.IsNullOrWhiteSpace(runtimeIdentifier))
+        //            {
+        //                libFilePath = Path.Combine(baseDirectory, "runtimes", runtimeIdentifier, "native", libFileName);
+        //                if (File.Exists(libFilePath))
+        //                {
+        //                    return libFilePath;
+        //                }
+        //            }
 
-            libFilePath = Path.Combine(baseDirectory, libFileName);
-            return libFilePath;
-        }
+        //            libFilePath = Path.Combine(baseDirectory, libFileName);
+        //            return libFilePath;
+        //        }
 
         /// <summary>
         /// 7-zip library handle.
@@ -212,12 +212,12 @@ namespace SevenZip
 
                 if (_modulePtr == IntPtr.Zero)
                 {
-                    if (_libraryFileName == null)
-                    {
-                        _libraryFileName = DetermineLibraryFilePath();
-                    }
+                    //if (_libraryFileName == null)
+                    //{
+                    //    _libraryFileName = DetermineLibraryFilePath();
+                    //}
 
-                    if (!File.Exists(_libraryFileName))
+                    if (_libraryFileName == null || !File.Exists(_libraryFileName))
                     {
                         throw new SevenZipLibraryException("DLL file does not exist.");
                     }
@@ -273,9 +273,14 @@ namespace SevenZip
                 {
                     if (!_modifyCapable.HasValue)
                     {
+                        //if (_libraryFileName == null)
+                        //{
+                        //    _libraryFileName = DetermineLibraryFilePath();
+                        //}
+
                         if (_libraryFileName == null)
                         {
-                            _libraryFileName = DetermineLibraryFilePath();
+                            throw new SevenZipLibraryException("DLL file does not exist.");
                         }
 
                         var dllVersionInfo = FileVersionInfo.GetVersionInfo(_libraryFileName);

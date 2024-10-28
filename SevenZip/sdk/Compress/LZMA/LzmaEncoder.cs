@@ -178,12 +178,12 @@ namespace SevenZip.Sdk.Compression.Lzma
                     case CoderPropId.Algorithm:
                     {
                         /*
-						if (!(prop is Int32))
-							throw new InvalidParamException();
-						Int32 maximize = (Int32)prop;
-						_fastMode = (maximize == 0);
-						_maxMode = (maximize >= 2);
-						*/
+if (!(prop is Int32))
+	throw new InvalidParamException();
+Int32 maximize = (Int32)prop;
+_fastMode = (maximize == 0);
+_maxMode = (maximize >= 2);
+*/
                         break;
                     }
                     case CoderPropId.MatchFinder:
@@ -980,8 +980,8 @@ namespace SevenZip.Sdk.Compression.Lzma
 
         /*static bool ChangePair(UInt32 smallDist, UInt32 bigDist)
 		{
-			const int kDif = 7;
-			return (smallDist < ((UInt32)(1) << (32 - kDif)) && bigDist >= (smallDist << kDif));
+const int kDif = 7;
+return (smallDist < ((UInt32)(1) << (32 - kDif)) && bigDist >= (smallDist << kDif));
 		}*/
 
         private void WriteEndMarker(uint posState)
@@ -1208,7 +1208,7 @@ namespace SevenZip.Sdk.Compression.Lzma
         }
 
         private void SetStreams(Stream inStream, Stream outStream /*,
-				Int64 inSize, Int64 outSize*/)
+	Int64 inSize, Int64 outSize*/)
         {
             _inStream = inStream;
             _finished = false;
@@ -1566,7 +1566,7 @@ namespace SevenZip.Sdk.Compression.Lzma
 
         internal void SetTrainSize(uint trainSize)
 		{
-			_trainSize = trainSize;
+_trainSize = trainSize;
 		}
     }
 }

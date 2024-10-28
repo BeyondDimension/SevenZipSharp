@@ -444,20 +444,20 @@ namespace SevenZip.Sdk.Compression.Lzma
 		public override long Length { get { return 0; }}
 		public override long Position
 		{
-			get { return 0;	}
-			set { }
+get { return 0;	}
+set { }
 		}
 		public override void Flush() { }
 		public override int Read(byte[] buffer, int offset, int count) 
 		{
-			return 0;
+return 0;
 		}
 		public override void Write(byte[] buffer, int offset, int count)
 		{
 		}
 		public override long Seek(long offset, System.IO.SeekOrigin origin)
 		{
-			return 0;
+return 0;
 		}
 		public override void SetLength(long value) {}
 		*/

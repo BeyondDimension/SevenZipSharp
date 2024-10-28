@@ -12,13 +12,13 @@
         /// </summary>
         /// <param name="percentDone">The percent of finished work.</param>
         /// <exception cref="System.ArgumentOutOfRangeException"/>
-        public PercentDoneEventArgs(byte percentDone)
+        public PercentDoneEventArgs(float percentDone)
         {
-            if (percentDone > 100 || percentDone < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(percentDone),
-                    "The percent of finished work must be between 0 and 100.");
-            }
+            //if (percentDone > 100 || percentDone < 0)
+            //{
+            //    throw new ArgumentOutOfRangeException(nameof(percentDone),
+            //        "The percent of finished work must be between 0 and 100.");
+            //}
 
             PercentDone = percentDone;
         }
@@ -26,17 +26,6 @@
         /// <summary>
         /// Gets the percent of finished work.
         /// </summary>
-        public byte PercentDone { get; }
-
-        /// <summary>
-        /// Converts a [0, 1] rate to its percent equivalent.
-        /// </summary>
-        /// <param name="doneRate">The rate of the done work.</param>
-        /// <returns>Percent integer equivalent.</returns>
-        /// <exception cref="System.ArgumentException"/>
-        internal static byte ProducePercentDone(float doneRate)
-        {
-            return (byte)Math.Round(Math.Min(100 * doneRate, 100), MidpointRounding.AwayFromZero);
-        }
+        public float PercentDone { get; }
     }
 }

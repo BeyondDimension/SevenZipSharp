@@ -10,7 +10,7 @@
         /// </summary>
         /// <param name="fileInfo">The current ArchiveFileInfo.</param>
         /// <param name="percentDone">The percent of finished work.</param>
-        public FileInfoEventArgs(ArchiveFileInfo fileInfo, byte percentDone)
+        public FileInfoEventArgs(ArchiveFileInfo fileInfo, float percentDone)
             : base(percentDone)
         {
             FileInfo = fileInfo;

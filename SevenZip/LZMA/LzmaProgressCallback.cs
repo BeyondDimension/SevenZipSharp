@@ -45,8 +45,8 @@
                     _oldPercentDone = newPercentDone;
                 }
                 Working(this, new ProgressEventArgs(
-                                  PercentDoneEventArgs.ProducePercentDone(newPercentDone),
-                                  delta > 0 ? PercentDoneEventArgs.ProducePercentDone(delta) : (byte)0));
+                                  newPercentDone,
+                                  delta > 0 ? delta : 0));
             }
         }
 

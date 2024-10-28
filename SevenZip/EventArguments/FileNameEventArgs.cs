@@ -14,7 +14,7 @@ namespace SevenZip
         /// </summary>
         /// <param name="fileName">The file name.</param>
         /// <param name="percentDone">The percent of finished work</param>
-        public FileNameEventArgs(string fileName, byte percentDone) :
+        public FileNameEventArgs(string fileName, float percentDone) :
             base(percentDone)
         {
             FileName = fileName;
